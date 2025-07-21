@@ -4,7 +4,7 @@ import os
 
 # --- 1. Configuration ---
 # Load API key from Streamlit secrets or environment
-GROQ_API_KEY = st.secrets.get("GROQ_API_KEY") or os.getenv("GROQ_API_KEY")
+GROQ_API_KEY = st.secrets.get("GROQ_API_KEY")
 
 # Validate the API key
 if not GROQ_API_KEY:
