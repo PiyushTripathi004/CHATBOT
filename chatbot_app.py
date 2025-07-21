@@ -7,9 +7,9 @@ import os
 GROQ_API_KEY = st.secrets.get("GROQ_API_KEY")
 
 # Validate the API key
-if not GROQ_API_KEY:
-    st.error("❌ GROQ_API_KEY not found. Please add it to .streamlit/secrets.toml")
-    st.stop()
+#if not GROQ_API_KEY:
+    #st.error("❌ GROQ_API_KEY not found. Please add it to .streamlit/secrets.toml")
+    #st.stop()
 
 # Initialize Groq client
 client = Groq(api_key=GROQ_API_KEY)
