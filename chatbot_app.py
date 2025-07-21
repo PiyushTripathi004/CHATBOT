@@ -1,18 +1,25 @@
 import streamlit as st
-from groq import Groq
 import os
+from groq import Groq
 
-# --- 1. Configuration ---
-# Load API key from Streamlit secrets or environment
-GROQ_API_KEY = st.secrets.get("GROQ_API_KEY")
+# 1. Try to read from Streamlit secrets (Cloud)
+key = st.secrets.get("GROQ_API_KEY", None)
 
-# Validate the API key
-#if not GROQ_API_KEY:
-    #st.error("❌ GROQ_API_KEY not found. Please add it to .streamlit/secrets.toml")
-    #st.stop()
+# 2. Fallback: Try to get from env var (for local/dev or advanced users)
+if key is None:
+    key = os.environ.get("GROQ_API_KEY", None)
 
-# Initialize Groq client
-client = Groq(api_key=GROQ_API_KEY)
+# 3. If still not found, show error
+if not key:
+    st.error("❌ GROQ_API_KEY not found. Please set it in .streamlit/secrets.toml or as an environment variable.")
+    st.stop()
+
+# 4. Always set as env var as well (for 3rd-party/Python compatibility)
+os.environ["GROQ_API_KEY"] = key
+
+# 5. Pass to client explicitly (always works on all platforms)
+client = Groq(api_key=key)
+
 
 # Set system instructions for chat
 SYSTEM_PROMPT = "You are a helpful assistant. Answer all user questions conversationally."
