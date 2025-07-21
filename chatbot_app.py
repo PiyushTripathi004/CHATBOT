@@ -1,69 +1,61 @@
 import streamlit as st
 from groq import Groq
-import requests
 import os
 
 # --- 1. Configuration ---
-# Load API key from .env if running locally
-GROQ_API_KEY = st.secrets.get("GROQ_API_KEY")
+# Load API key from Streamlit secrets or environment
+GROQ_API_KEY = st.secrets.get("GROQ_API_KEY") or os.getenv("GROQ_API_KEY")
 
+# Validate the API key
+if not GROQ_API_KEY:
+    st.error("❌ GROQ_API_KEY not found. Please add it to .streamlit/secrets.toml")
+    st.stop()
+
+# Initialize Groq client
 client = Groq(api_key=GROQ_API_KEY)
 
-# Example for chat API call
-response = client.chat.completions.create(
-    model="llama3-8b-8192",
-    messages=[
-        {"role": "system", "content": "You are a helpful assistant."},
-        {"role": "user", "content": "Hello!"}
-    ]
-)
-assistant_reply = response.choices[0].message.content
-st.write(assistant_reply)
-
+# Set system instructions for chat
 SYSTEM_PROMPT = "You are a helpful assistant. Answer all user questions conversationally."
 
-st.set_page_config(page_title="Chatbot", layout="wide")
-st.title("🤖 PIYUSH CHATBOT ")
+# --- 2. Page Layout ---
+st.set_page_config(page_title="Piyush Chatbot", layout="wide")
+st.title("🤖 PIYUSH CHATBOT")
 
-# --- 2. Initialize Chat History ---
+# --- 3. Chat History ---
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = [
         {"role": "system", "content": SYSTEM_PROMPT}
     ]
 
-# --- 3. Chat Display ---
-for msg in st.session_state.chat_history[1:]:  # Skip the system prompt
-    if msg["role"] == "user":
-        st.chat_message("user").markdown(msg["content"])
-    elif msg["role"] == "assistant":
-        st.chat_message("assistant").markdown(msg["content"])
+# Display chat
+for msg in st.session_state.chat_history[1:]:  # Skip system prompt
+    role = msg["role"]
+    with st.chat_message(role):
+        st.markdown(msg["content"])
 
-# --- 4. User Input ---
+# --- 4. User Input Box ---
 if prompt := st.chat_input("Type your message and press Enter"):
+    # Save user input
     st.session_state.chat_history.append({"role": "user", "content": prompt})
-    st.chat_message("user").markdown(prompt)
+    with st.chat_message("user"):
+        st.markdown(prompt)
 
-    # --- 5. Call Groq API ---
+    # Get model response from Groq
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
-            headers = {
-                "Authorization": f"Bearer {GROQ_API_KEY}",
-                "Content-Type": "application/json",
-            }
-            payload = {
-                "model": MODEL,
-                "messages": st.session_state.chat_history,
-                "temperature": 0.7,
-            }
             try:
-                response = requests.post(GROQ_API_URL, headers=headers, json=payload)
-                response.raise_for_status()
-                reply = response.json()["choices"][0]["message"]["content"]
+                response = client.chat.completions.create(
+                    model="llama3-8b-8192",  # Or llama3-70b-8192
+                    messages=st.session_state.chat_history,
+                    temperature=0.7,
+                )
+                reply = response.choices[0].message.content
             except Exception as e:
                 reply = f"❌ Error: {e}"
+        
+        st.markdown(reply)
+        st.session_state.chat_history.append({"role": "assistant", "content": reply})
 
-            st.markdown(reply)
-            st.session_state.chat_history.append({"role": "assistant", "content": reply})
 
 
 
