@@ -1,12 +1,10 @@
 import streamlit as st
 import requests
 import os
-from dotenv import load_dotenv
 
 # --- 1. Configuration ---
 # Load API key from .env if running locally
-load_dotenv()
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_API_KEY = st.secrets.get("GROQ_API_KEY")
 
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 MODEL = "llama3-8b-8192"  # You can try e.g. 'llama3-70b-8192' or other available models
